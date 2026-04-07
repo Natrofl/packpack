@@ -109,15 +109,24 @@ Please file an [issue][Issues] if you want more.
   then modify `debian/` directory. Some examples are available from
   [tarantool/modulekit][ModuleKit] repository.
 
-- Create an **annotated** `major.minor` git tag in your repository.
+- Create an **annotated** git tag in your repository.
   PackPack will automatically set `patch` level based on the commit number
-  from this tag in order to provide `major.minor.patch` semantic versioning:
+  from this tag in order to provide `major.minor.patch` semantic versioning.
+  Pre-release tags (release candidates) in the form `major.minor.patch-rc.N`
+  are also supported:
 
 ```sh
+# Regular release tag
 $ git tag -a 1.0
 $ git describe --always --long
 1.0-0-g5c26e8b # major.minor-patch = 1.0-0
 $ git push origin 1.0:1.0 # Push to GitHub
+
+# Release candidate tag
+$ git tag -a 1.1.1-rc.1
+$ git describe --always --long
+1.1.1-rc.1-0-g5c26e8b
+$ git push origin 1.1.1-rc.1:1.1.1-rc.1 # Push to GitHub
 ```
 
 - Clone PackPack repository:
@@ -169,15 +178,15 @@ PackPack performs the following steps:
 - The source repository is mounted to the container as a read-only volume.
 
 - `major.minor.patch` version is extracted from `git describe` output.
+  Pre-release versions (e.g. `1.1.1-rc.1`) are supported — the `-rc.N`
+  suffix is preserved in `VERSION` and translated per packaging system
+  (see below).
 
 - A source tarball (`product-major.minor.patch.tar.gz`) is packed from
   files added to git repository.
 
 - For RPM package:
 
-  + `spec` file is copied from `rpm/`, `Version:` tag is updated
-     according to extracted `major.minor.patch` version, `%prep`
-     is updated to match the source tarball file name.
   + A source RPM (`product-major.minor.patch-release.dist.src.rpm`) is
     built from the source tarball using generated spec file.
   + BuildRequires are installed using `dnf builddep` or `yum-builddep`.
@@ -187,8 +196,6 @@ PackPack performs the following steps:
 
 - For Debian packages:
 
-  + `debian/changelog` is bumped with extracted `major.minor.patch`
-    git version.
   + Build-Depends are installed using `mk-build-deps` tool.
     Docker images already have a lot of packages pre-installed to
     speed up the build.
@@ -303,8 +310,9 @@ see an example in [Tarantool GitHub](https://github.com/tarantool/tarantool) rep
    packages (default is `./build`).
 * `PRODUCT` - the name of software product, used for source tarball and
    source package, e.g. `tarantool`
-* `VERSION` - semantic version of the software, e.g. 2.4.35
-   (default is extracted for `git describe`).
+* `VERSION` - semantic version of the software, e.g. `2.4.35` or `2.4.35-rc.1`
+   (default is extracted from `git describe`). Pre-release tags of the form
+   `major.minor.patch-rc.N` are supported.
 * `RELEASE` - the number of times this version of the software has been
    packaged (default is 1).
 * `ABBREV` - abbreviation of build metadata (default is git hash, extracted
