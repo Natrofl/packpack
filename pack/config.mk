@@ -42,7 +42,7 @@ DESCRIBE := $(shell git describe --long --always)
 # Sic: please follow Semantic Versioning (http://semver.org),
 # Debian policies and Fedora guidelines then planning your releases.
 #
-VERSION ?= $(shell echo $(DESCRIBE) | sed -n 's/^\([0-9\.]*\)-\([0-9]*\)-\([a-z0-9]*\)/\1.\2/p')
+VERSION ?= $(shell echo $(DESCRIBE) | sed -n 's/^\(.*\)-\([0-9]*\)-\([a-z0-9]*\)$/\1.\2/p')
 ifeq ($(VERSION),) # Fallback
 VERSION := 0.0.1
 endif
@@ -70,7 +70,7 @@ endif
 #   paradox.  The logic suggests to use 12 hexdigits for the Linux
 #   kernel, and 9 to 10 for Git itself.
 #
-ABBREV ?= $(shell echo $(DESCRIBE) | sed -n 's/^\([0-9\.]*\)-\([0-9]*\)-\([a-z0-9]*\)/\3/p')
+ABBREV ?= $(shell echo $(DESCRIBE) | sed -n 's/^\(.*\)-\([0-9]*\)-\([a-z0-9]*\)$/\3/p')
 
 # Name, email and text for changelog entry
 CHANGELOG_NAME ?= PackPack
