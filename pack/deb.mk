@@ -2,7 +2,9 @@
 # Packer for Debian packages
 #
 
-DEB_VERSION:=$(VERSION)
+# Debian uses '~' to denote pre-release versions (sorts before the release).
+# Replace '-' with '~' in the pre-release part, e.g. 25.6.0-rc.1.0 -> 25.6.0~rc.1.0
+DEB_VERSION:=$(shell echo $(VERSION) | sed 's/-/~/')
 DEB_EPOCH:=$(shell grep '^[\ \t]*Version:' debian/control | sed -n 's/^[\ \t]*Version:[\ \t]*\([0-9]\+:\).*$$/\1/p')
 ifneq ($(shell dpkg-parsechangelog|grep ^Version|grep -E "g[abcdef0-9]{7,16}\-[0-9]+"),)
 ifneq ($(ABBREV),)

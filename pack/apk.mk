@@ -14,17 +14,21 @@ APKBUILDIN := $(wildcard apk/APKBUILD)
 APKBUILD := APKBUILD
 USER:=$(shell whoami)
 
+# Alpine pkgver does not allow '-'. Replace '-' with '~' for pre-release
+# versions, e.g. 25.6.0-rc.1.0 -> 25.6.0~rc.1.0
+APKVERSION := $(subst -,~,$(VERSION))
+
 $(BUILDDIR)/$(APKBUILD): $(APKBUILDIN)
 	@echo "-------------------------------------------------------------------"
 	@echo "Patching APKBUILD"
 	@echo "-------------------------------------------------------------------"
 	@cp $< $@.tmp
 	sed \
-		-e 's/pkgver=.*/pkgver="$(VERSION)"/' \
+		-e 's/pkgver=.*/pkgver="$(APKVERSION)"/' \
 		-e 's/pkgrel=.*/pkgrel="$(RELEASE)"/' \
 		-e 's/source=.*/source="$(TARBALL)"/' \
 		-i $@.tmp
-	grep -F 'pkgver="$(VERSION)"' $@.tmp && \
+	grep -F 'pkgver="$(APKVERSION)"' $@.tmp && \
 		grep -F 'pkgrel="$(RELEASE)"' $@.tmp && \
 		grep -F 'source="$(TARBALL)"' $@.tmp || \
 		(echo "Failed to patch APKBUILD" && exit 1)

@@ -18,6 +18,10 @@ else
 RPMNAME := $(shell rpmspec -P $(RPMSPECIN) | sed -n -e 's/Name:\([\ \t]*\)\(.*\)/\2/p')
 endif
 
+# RPM does not allow '-' in the Version field. Replace '-' with '~' for
+# pre-release versions, e.g. 25.6.0-rc.1.0 -> 25.6.0~rc.1.0
+RPMVERSION := $(subst -,~,$(VERSION))
+
 # Usual 'Release' RPM spec directive value is 1%{?dist}, where
 # where 1 is $(RELEASE) value and %{dist} is like .el8 or .fc31.
 RPMRELEASE := $(RELEASE)%{dist}
@@ -49,7 +53,7 @@ else ifneq (,$(shell grep "^ID=\"mosos-arbat\"" /etc/os-release))
 	RPMRELEASE := $(RPMDIST).$(RELEASE).1
 endif
 
-PKGVERSION := $(shell rpm -E "$(VERSION)-$(RPMRELEASE)")
+PKGVERSION := $(shell rpm -E "$(RPMVERSION)-$(RPMRELEASE)")
 RPMSPEC := $(RPMNAME).spec
 RPMSRC := $(RPMNAME)-$(PKGVERSION).src.rpm
 PREBUILD := prebuild.sh
@@ -117,15 +121,15 @@ $(BUILDDIR)/$(RPMSPEC): $(RPMSPECIN)
 	@echo "-------------------------------------------------------------------"
 	@cp $< $@.tmp
 	sed \
-		-e 's/Version:\([ ]*\).*/Version: $(VERSION)/' \
+		-e 's/Version:\([ ]*\).*/Version: $(RPMVERSION)/' \
 		-e 's/Release:\([ ]*\).*/Release: $(RPMRELEASE)/' \
 		-e 's/Source0:\([ ]*\).*/Source0: $(TARBALL)/' \
 		-e 's/%setup.*/%setup -q -n $(PRODUCT)-$(VERSION)/' \
                 -re 's/(%autosetup.*)( -n \S*)(.*)/\1\3/' \
 		-e '0,/%autosetup.*/ s/%autosetup.*/%autosetup -n $(PRODUCT)-$(VERSION)/' \
-                -e '/%changelog/a\* $(THEDATE) $(CHANGELOG_NAME) <$(CHANGELOG_EMAIL)> - $(VERSION)-$(RELEASE)\n\- $(CHANGELOG_TEXT)\n' \
+                -e '/%changelog/a\* $(THEDATE) $(CHANGELOG_NAME) <$(CHANGELOG_EMAIL)> - $(RPMVERSION)-$(RELEASE)\n\- $(CHANGELOG_TEXT)\n' \
 		-i $@.tmp
-	grep -F "Version: $(VERSION)" $@.tmp && \
+	grep -F "Version: $(RPMVERSION)" $@.tmp && \
 		grep -F "Release: $(RPMRELEASE)" $@.tmp && \
 		grep -F "Source0: $(TARBALL)" $@.tmp && \
 		(grep -F "%setup -q -n $(PRODUCT)-$(VERSION)" $@.tmp || \
