@@ -20,7 +20,15 @@ endif
 
 # RPM does not allow '-' in the Version field. Replace '-' with '~' for
 # pre-release versions, e.g. 25.6.0-rc.1.0 -> 25.6.0~rc.1.0
+# Exception: ALT Linux p9 ships old rpmbuild that rejects '~' in Version;
+# use '_' instead, e.g. 25.6.0-rc.1.0 -> 25.6.0_rc.1.0
+_OS_ID   := $(shell . /etc/os-release 2>/dev/null && echo $$ID)
+_OS_DIST := $(shell . /etc/os-release 2>/dev/null && echo $$VERSION_ID)
+ifeq ($(_OS_ID)-$(_OS_DIST),altlinux-p9)
+RPMVERSION := $(subst -,_,$(VERSION))
+else
 RPMVERSION := $(subst -,~,$(VERSION))
+endif
 
 # Usual 'Release' RPM spec directive value is 1%{?dist}, where
 # where 1 is $(RELEASE) value and %{dist} is like .el8 or .fc31.
